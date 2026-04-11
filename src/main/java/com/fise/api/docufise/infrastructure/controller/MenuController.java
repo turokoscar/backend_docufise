@@ -28,6 +28,13 @@ public class MenuController {
         return ResponseEntity.ok(ApiResponse.ok(menus, "Listado de menús", menus.size()));
     }
     
+    @Operation(summary = "Listar menús por rol", description = "Retorna los menús asignados a un rol específico")
+    @GetMapping("/rol/{rolId}")
+    public ResponseEntity<ApiResponse<List<Menu>>> listarPorRol(@Parameter(example = "1") @PathVariable Integer rolId) {
+        List<Menu> menus = menuInputPort.listarPorRol(rolId);
+        return ResponseEntity.ok(ApiResponse.ok(menus, "Menús del rol", menus.size()));
+    }
+    
     @Operation(summary = "Buscar menú", description = "Obtiene un menú por su ID")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Menu>> buscarPorId(@Parameter(example = "1") @PathVariable Integer id) {

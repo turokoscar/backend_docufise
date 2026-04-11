@@ -3,6 +3,7 @@ package com.fise.api.docufise.domain.model;
 import lombok.*;
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "rol")
@@ -28,6 +29,14 @@ public class Rol {
     
     @Column(name = "flg_activo", nullable = false)
     private Boolean activo = true;
+    
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "rol_menu",
+        joinColumns = @JoinColumn(name = "ide_rol"),
+        inverseJoinColumns = @JoinColumn(name = "ide_menu")
+    )
+    private List<Menu> menus;
     
     @Column(name = "fec_registro", updatable = false)
     private LocalDateTime createdAt;

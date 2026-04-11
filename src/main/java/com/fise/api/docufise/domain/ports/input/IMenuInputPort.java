@@ -5,6 +5,7 @@ import java.util.List;
 
 public interface IMenuInputPort {
     List<Menu> listarTodos();
+    List<Menu> listarPorRol(Integer rolId);
     Menu buscarPorId(Integer id);
     Menu crear(Menu menu);
     Menu actualizar(Integer id, Menu menu);
