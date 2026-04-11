@@ -14,48 +14,49 @@ public class Firma {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ide_firma")
     private Integer id;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "documento_id", nullable = false)
+    @JoinColumn(name = "ide_documento", nullable = false)
     private Documento documento;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_asignado_id", nullable = false)
+    @JoinColumn(name = "ide_usuarioAsignado", nullable = false)
     private Usuario usuarioAsignado;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "estado_id", nullable = false)
+    @JoinColumn(name = "ide_estado", nullable = false)
     private EstadoExpedienteEntity estado;
     
-    @Column(name = "fecha_asignacion")
+    @Column(name = "fec_asignacion")
     private LocalDateTime fechaAsignacion;
     
-    @Column(name = "fecha_descarga")
+    @Column(name = "fec_descarga")
     private LocalDateTime fechaDescarga;
     
-    @Column(name = "fecha_firma")
+    @Column(name = "fec_firma")
     private LocalDateTime fechaFirma;
     
-    @Column(name = "ruta_archivo_original", length = 500)
+    @Column(name = "txt_rutaArchivoOriginal", length = 500)
     private String rutaArchivoOriginal;
     
-    @Column(name = "ruta_archivo_firmado", length = 500)
+    @Column(name = "txt_rutaArchivoFirmado", length = 500)
     private String rutaArchivoFirmado;
     
-    @Column(name = "motivo_rechazo", columnDefinition = "TEXT")
+    @Column(name = "txt_motivoRechazo", columnDefinition = "TEXT")
     private String motivoRechazo;
     
-    @Column(name = "ip_descarga", length = 45)
+    @Column(name = "txt_ipDescarga", length = 45)
     private String ipDescarga;
     
-    @Column(name = "ip_firma", length = 45)
+    @Column(name = "txt_ipFirma", length = 45)
     private String ipFirma;
     
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "fec_registro", updatable = false)
     private LocalDateTime createdAt;
     
-    @Column(name = "updated_at")
+    @Column(name = "fec_modificacion")
     private LocalDateTime updatedAt;
     
     @PrePersist

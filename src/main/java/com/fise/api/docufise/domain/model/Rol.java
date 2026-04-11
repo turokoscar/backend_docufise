@@ -14,24 +14,25 @@ public class Rol {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ide_rol")
     private Integer id;
     
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(name = "txt_nombre", nullable = false, unique = true, length = 50)
     private String nombre;
     
-    @Column(length = 255)
+    @Column(name = "txt_descripcion", length = 255)
     private String descripcion;
     
-    @Column(name = "nivel_permiso")
+    @Column(name = "num_nivelPermiso")
     private Integer nivelPermiso;
     
-    @Column(nullable = false)
+    @Column(name = "flg_activo", nullable = false)
     private Boolean activo = true;
     
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "fec_registro", updatable = false)
     private LocalDateTime createdAt;
     
-    @Column(name = "updated_at")
+    @Column(name = "fec_modificacion")
     private LocalDateTime updatedAt;
     
     @PrePersist

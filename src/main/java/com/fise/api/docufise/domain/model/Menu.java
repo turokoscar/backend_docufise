@@ -14,30 +14,31 @@ public class Menu {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ide_menu")
     private Integer id;
     
-    @Column(nullable = false, length = 100)
+    @Column(name = "txt_nombre", nullable = false, length = 100)
     private String nombre;
     
-    @Column(length = 255)
+    @Column(name = "txt_ruta", length = 255)
     private String ruta;
     
-    @Column(length = 50)
+    @Column(name = "txt_icono", length = 50)
     private String icono;
     
-    @Column
+    @Column(name = "num_orden")
     private Integer orden;
     
-    @Column(name = "requerido_login")
+    @Column(name = "flg_requeridoLogin")
     private Boolean requeridoLogin = true;
     
-    @Column(nullable = false)
+    @Column(name = "flg_activo", nullable = false)
     private Boolean activo = true;
     
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "fec_registro", updatable = false)
     private LocalDateTime createdAt;
     
-    @Column(name = "updated_at")
+    @Column(name = "fec_modificacion")
     private LocalDateTime updatedAt;
     
     @PrePersist

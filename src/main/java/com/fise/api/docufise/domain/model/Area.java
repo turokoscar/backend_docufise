@@ -14,24 +14,25 @@ public class Area {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ide_area")
     private Integer id;
     
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(name = "txt_nombre", nullable = false, unique = true, length = 100)
     private String nombre;
     
-    @Column(length = 255)
+    @Column(name = "txt_descripcion", length = 255)
     private String descripcion;
     
-    @Column(unique = true, length = 20)
+    @Column(name = "txt_codigo", unique = true, length = 20)
     private String codigo;
     
-    @Column(nullable = false)
+    @Column(name = "flg_activo", nullable = false)
     private Boolean activo = true;
     
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "fec_registro", updatable = false)
     private LocalDateTime createdAt;
     
-    @Column(name = "updated_at")
+    @Column(name = "fec_modificacion")
     private LocalDateTime updatedAt;
     
     @PrePersist
