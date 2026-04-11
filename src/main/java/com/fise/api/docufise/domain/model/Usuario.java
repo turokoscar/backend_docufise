@@ -28,11 +28,11 @@ public class Usuario {
     @Column(nullable = false, unique = true, length = 100)
     private String correo;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "area_id")
     private Area area;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "rol_id")
     private Rol rol;
     

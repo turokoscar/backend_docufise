@@ -1,5 +1,10 @@
 package com.fise.api.docufise.application.service;
 
+import com.fise.api.docufise.domain.exception.DocumentoNotFoundException;
+import com.fise.api.docufise.domain.exception.EstadoNotFoundException;
+import com.fise.api.docufise.domain.exception.FirmaNotFoundException;
+import com.fise.api.docufise.domain.exception.UsuarioNotFoundException;
+import com.fise.api.docufise.domain.ports.input.FirmaInputPort;
 import com.fise.api.docufise.shared.dto.FirmaRequest;
 import com.fise.api.docufise.domain.model.*;
 import com.fise.api.docufise.domain.repository.*;
@@ -10,32 +15,33 @@ import java.util.List;
 
 @Service
 @Transactional
-public class FirmaService {
+public class FirmaService implements FirmaInputPort {
     
-    private final IFirmaRepository IfirmaRepository;
-    private final IDocumentoRepository IdocumentoRepository;
-    private final IUsuarioRepository IusuarioRepository;
-    private final IEstadoExpedienteRepository IestadoExpedienteRepository;
+    private final IFirmaRepository firmaRepository;
+    private final IDocumentoRepository documentoRepository;
+    private final IUsuarioRepository usuarioRepository;
+    private final IEstadoExpedienteRepository estadoExpedienteRepository;
     
-    public FirmaService(IFirmaRepository IfirmaRepository,
-                     IDocumentoRepository IdocumentoRepository,
-                     IUsuarioRepository IusuarioRepository,
-                     IEstadoExpedienteRepository IestadoExpedienteRepository) {
-        this.IfirmaRepository = IfirmaRepository;
-        this.IdocumentoRepository = IdocumentoRepository;
-        this.IusuarioRepository = IusuarioRepository;
-        this.IestadoExpedienteRepository = IestadoExpedienteRepository;
+    public FirmaService(IFirmaRepository firmaRepository,
+                     IDocumentoRepository documentoRepository,
+                     IUsuarioRepository usuarioRepository,
+                     IEstadoExpedienteRepository estadoExpedienteRepository) {
+        this.firmaRepository = firmaRepository;
+        this.documentoRepository = documentoRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.estadoExpedienteRepository = estadoExpedienteRepository;
     }
     
+    @Override
     public Firma crear(FirmaRequest request) {
-        Documento documento = IdocumentoRepository.findById(request.getDocumentoId())
-                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+        Documento documento = documentoRepository.findById(request.getDocumentoId())
+                .orElseThrow(() -> new DocumentoNotFoundException(request.getDocumentoId()));
         
-        Usuario usuarioAsignado = IusuarioRepository.findById(request.getUsuarioAsignadoId())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Usuario usuarioAsignado = usuarioRepository.findById(request.getUsuarioAsignadoId())
+                .orElseThrow(() -> new UsuarioNotFoundException(String.valueOf(request.getUsuarioAsignadoId())));
         
-        EstadoExpedienteEntity estado = IestadoExpedienteRepository.findByNombre("PENDIENTE")
-                .orElseThrow(() -> new RuntimeException("Estado PENDIENTE no encontrado"));
+        EstadoExpedienteEntity estado = estadoExpedienteRepository.findByNombre("PENDIENTE")
+                .orElseThrow(() -> new EstadoNotFoundException(0));
         
         Firma firma = Firma.builder()
                 .documento(documento)
@@ -44,53 +50,58 @@ public class FirmaService {
                 .rutaArchivoOriginal(request.getRutaArchivoOriginal())
                 .build();
         
-        return IfirmaRepository.save(firma);
+        return firmaRepository.save(firma);
     }
     
+    @Override
     public Firma marcarDescargado(Integer id, String ip) {
-        Firma firma = IfirmaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Firma no encontrada"));
+        Firma firma = firmaRepository.findById(id)
+                .orElseThrow(() -> new FirmaNotFoundException(id));
         
         firma.setFechaDescarga(LocalDateTime.now());
         firma.setIpDescarga(ip);
         
-        return IfirmaRepository.save(firma);
+        return firmaRepository.save(firma);
     }
     
+    @Override
     public Firma firmar(Integer id, String rutaArchivoFirmado, String ip) {
-        Firma firma = IfirmaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Firma no encontrada"));
+        Firma firma = firmaRepository.findById(id)
+                .orElseThrow(() -> new FirmaNotFoundException(id));
         
-        EstadoExpedienteEntity estado = IestadoExpedienteRepository.findByNombre("FIRMADO")
-                .orElseThrow(() -> new RuntimeException("Estado FIRMADO no encontrado"));
+        EstadoExpedienteEntity estado = estadoExpedienteRepository.findByNombre("FIRMADO")
+                .orElseThrow(() -> new EstadoNotFoundException(0));
         
         firma.setFechaFirma(LocalDateTime.now());
         firma.setRutaArchivoFirmado(rutaArchivoFirmado);
         firma.setIpFirma(ip);
         firma.setEstado(estado);
         
-        return IfirmaRepository.save(firma);
+        return firmaRepository.save(firma);
     }
     
+    @Override
     public Firma rechazar(Integer id, String motivoRechazo, String ip) {
-        Firma firma = IfirmaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Firma no encontrada"));
+        Firma firma = firmaRepository.findById(id)
+                .orElseThrow(() -> new FirmaNotFoundException(id));
         
-        EstadoExpedienteEntity estado = IestadoExpedienteRepository.findByNombre("OBSERVADO")
-                .orElseThrow(() -> new RuntimeException("Estado OBSERVADO no encontrado"));
+        EstadoExpedienteEntity estado = estadoExpedienteRepository.findByNombre("OBSERVADO")
+                .orElseThrow(() -> new EstadoNotFoundException(0));
         
         firma.setMotivoRechazo(motivoRechazo);
         firma.setIpFirma(ip);
         firma.setEstado(estado);
         
-        return IfirmaRepository.save(firma);
+        return firmaRepository.save(firma);
     }
     
+    @Override
     public List<Firma> listarPorUsuario(Integer usuarioId) {
-        return IfirmaRepository.findByUsuarioAsignadoId(usuarioId);
+        return firmaRepository.findByUsuarioAsignadoId(usuarioId);
     }
     
+    @Override
     public List<Firma> listarPendientes(Integer usuarioId) {
-        return IfirmaRepository.findPendientesByUsuario(usuarioId);
+        return firmaRepository.findPendientesByUsuario(usuarioId);
     }
 }

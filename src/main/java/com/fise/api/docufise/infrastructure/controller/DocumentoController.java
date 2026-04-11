@@ -1,79 +1,97 @@
 package com.fise.api.docufise.infrastructure.controller;
 
-import com.fise.api.docufise.shared.dto.ApiResponse;
 import com.fise.api.docufise.shared.dto.DocumentoRequest;
 import com.fise.api.docufise.domain.model.Documento;
-import com.fise.api.docufise.application.service.DocumentoService;
+import com.fise.api.docufise.domain.ports.input.DocumentoInputPort;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/documentos")
+@RequestMapping("/api/v1/documentos")
+@Tag(name = "Documentos", description = "Gestión de documentos y expedientes")
 public class DocumentoController {
     
-    private final DocumentoService documentoService;
+    private final DocumentoInputPort documentoInputPort;
     
-    public DocumentoController(DocumentoService documentoService) {
-        this.documentoService = documentoService;
+    public DocumentoController(DocumentoInputPort documentoInputPort) {
+        this.documentoInputPort = documentoInputPort;
     }
     
+    @Operation(summary = "Crear documento", description = "Registra un nuevo documento con estado inicial REGISTRADO")
     @PostMapping
-    public ResponseEntity<ApiResponse<Documento>> crear(@RequestBody DocumentoRequest request) {
-        return ResponseEntity.ok(ApiResponse.ok(documentoService.crear(request)));
+    public ResponseEntity<com.fise.api.docufise.shared.dto.ApiResponse<Documento>> crear(@RequestBody DocumentoRequest request) {
+        return ResponseEntity.ok(com.fise.api.docufise.shared.dto.ApiResponse.ok(documentoInputPort.crear(request)));
     }
     
+    @Operation(summary = "Actualizar documento", description = "Actualiza un documento existente")
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Documento>> actualizar(@PathVariable Integer id, @RequestBody DocumentoRequest request) {
-        return ResponseEntity.ok(ApiResponse.ok(documentoService.actualizar(id, request)));
+    public ResponseEntity<com.fise.api.docufise.shared.dto.ApiResponse<Documento>> actualizar(@Parameter(example = "1") @PathVariable Integer id, @RequestBody DocumentoRequest request) {
+        return ResponseEntity.ok(com.fise.api.docufise.shared.dto.ApiResponse.ok(documentoInputPort.actualizar(id, request)));
     }
     
+    @Operation(summary = "Eliminar documento", description = "Elimina un documento por su ID")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Integer id) {
-        documentoService.eliminar(id);
-        return ResponseEntity.ok(ApiResponse.ok(null, "Documento eliminado correctamente"));
+    public ResponseEntity<com.fise.api.docufise.shared.dto.ApiResponse<Void>> eliminar(@Parameter(example = "1") @PathVariable Integer id) {
+        documentoInputPort.eliminar(id);
+        return ResponseEntity.ok(com.fise.api.docufise.shared.dto.ApiResponse.ok(null, "Documento eliminado correctamente"));
     }
     
+    @Operation(summary = "Buscar documento", description = "Obtiene un documento por su ID")
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Documento>> buscarPorId(@PathVariable Integer id) {
-        return ResponseEntity.ok(ApiResponse.ok(documentoService.buscarPorId(id)));
+    public ResponseEntity<com.fise.api.docufise.shared.dto.ApiResponse<Documento>> buscarPorId(@Parameter(example = "1") @PathVariable Integer id) {
+        return ResponseEntity.ok(com.fise.api.docufise.shared.dto.ApiResponse.ok(documentoInputPort.buscarPorId(id)));
     }
     
+    @Operation(summary = "Listar documentos", description = "Lista documentos con filtros")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Documento>>> listarTodos() {
-        List<Documento> lista = documentoService.listarTodos();
-        return ResponseEntity.ok(ApiResponse.ok(lista, "Listado de documentos", lista.size()));
+    public ResponseEntity<com.fise.api.docufise.shared.dto.ApiResponse<List<Documento>>> listarTodos(
+            @Parameter(description = "Estado: REGISTRADO, INGRESADO, PENDIENTE, OBSERVADO, FIRMADO", example = "PENDIENTE")
+            @RequestParam(required = false) String estado,
+            @Parameter(example = "1") @RequestParam(required = false) Integer areaId,
+            @RequestParam(required = false) Integer usuarioId,
+            @RequestParam(required = false) Integer usuarioElaboraId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(defaultValue = "10") Integer limit) {
+        
+        List<Documento> lista;
+        
+        if (estado != null && areaId != null) {
+            lista = documentoInputPort.listarPendientesPorArea(areaId);
+        } else if (estado != null && usuarioId != null) {
+            lista = documentoInputPort.listarPendientesPorUsuario(usuarioId);
+        } else if (usuarioElaboraId != null) {
+            lista = documentoInputPort.listarPorUsuarioElabora(usuarioElaboraId);
+        } else {
+            lista = documentoInputPort.listarTodos();
+        }
+        
+        int total = lista.size();
+        if (page != null && limit != null) {
+            int start = (page - 1) * limit;
+            lista = lista.stream().skip(start).limit(limit).collect(Collectors.toList());
+        }
+        
+        return ResponseEntity.ok(com.fise.api.docufise.shared.dto.ApiResponse.ok(lista, "Listado de documentos", total));
     }
     
-    @GetMapping("/elabora/{usuarioId}")
-    public ResponseEntity<ApiResponse<List<Documento>>> listarPorUsuarioElabora(@PathVariable Integer usuarioId) {
-        List<Documento> lista = documentoService.listarPorUsuarioElabora(usuarioId);
-        return ResponseEntity.ok(ApiResponse.ok(lista, "Documentos por usuario elaborador", lista.size()));
+    @Operation(summary = "Cambiar estado", description = "Cambia el estado de un documento")
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<com.fise.api.docufise.shared.dto.ApiResponse<Documento>> cambiarEstado(@Parameter(example = "1") @PathVariable Integer id, 
+            @RequestParam Integer estadoId,
+            @RequestParam(required = false) String observaciones) {
+        return ResponseEntity.ok(com.fise.api.docufise.shared.dto.ApiResponse.ok(documentoInputPort.cambiarEstado(id, estadoId, observaciones)));
     }
     
-    @GetMapping("/pendientes/area/{areaId}")
-    public ResponseEntity<ApiResponse<List<Documento>>> listarPendientesPorArea(@PathVariable Integer areaId) {
-        List<Documento> lista = documentoService.listarPendientesPorArea(areaId);
-        return ResponseEntity.ok(ApiResponse.ok(lista, "Documentos pendientes por área", lista.size()));
-    }
-    
-    @GetMapping("/pendientes/usuario/{usuarioId}")
-    public ResponseEntity<ApiResponse<List<Documento>>> listarPendientesPorUsuario(@PathVariable Integer usuarioId) {
-        List<Documento> lista = documentoService.listarPendientesPorUsuario(usuarioId);
-        return ResponseEntity.ok(ApiResponse.ok(lista, "Documentos pendientes por usuario", lista.size()));
-    }
-    
-    @PutMapping("/{id}/estado")
-    public ResponseEntity<ApiResponse<Documento>> cambiarEstado(@PathVariable Integer id, 
-                                                @RequestParam Integer estadoId,
-                                                @RequestParam(required = false) String observaciones) {
-        return ResponseEntity.ok(ApiResponse.ok(documentoService.cambiarEstado(id, estadoId, observaciones)));
-    }
-    
-    @PutMapping("/{id}/derivar")
-    public ResponseEntity<ApiResponse<Documento>> derivar(@PathVariable Integer id,
-                                            @RequestParam(required = false) Integer areaDestinoId,
-                                            @RequestParam(required = false) Integer usuarioDestinoId) {
-        return ResponseEntity.ok(ApiResponse.ok(documentoService.derivar(id, areaDestinoId, usuarioDestinoId)));
+    @Operation(summary = "Derivar documento", description = "Deriva un documento a otra área o usuario")
+    @PatchMapping("/{id}")
+    public ResponseEntity<com.fise.api.docufise.shared.dto.ApiResponse<Documento>> derivar(@Parameter(example = "1") @PathVariable Integer id,
+            @RequestParam(required = false) Integer areaDestinoId,
+            @RequestParam(required = false) Integer usuarioDestinoId) {
+        return ResponseEntity.ok(com.fise.api.docufise.shared.dto.ApiResponse.ok(documentoInputPort.derivar(id, areaDestinoId, usuarioDestinoId)));
     }
 }

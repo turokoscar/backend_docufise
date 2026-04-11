@@ -1,5 +1,10 @@
 package com.fise.api.docufise.application.service;
 
+import com.fise.api.docufise.domain.exception.DocumentoNotFoundException;
+import com.fise.api.docufise.domain.exception.EstadoNotFoundException;
+import com.fise.api.docufise.domain.exception.TipoDocumentoNotFoundException;
+import com.fise.api.docufise.domain.exception.UsuarioNotFoundException;
+import com.fise.api.docufise.domain.ports.input.DocumentoInputPort;
 import com.fise.api.docufise.shared.dto.DocumentoRequest;
 import com.fise.api.docufise.shared.dto.DocumentoResponse;
 import com.fise.api.docufise.domain.model.*;
@@ -12,35 +17,39 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
-public class DocumentoService {
+public class DocumentoService implements DocumentoInputPort {
     
-    private final IDocumentoRepository IdocumentoRepository;
-    private final IUsuarioRepository IusuarioRepository;
-    private final ITipoDocumentoRepository ItipoDocumentoRepository;
-    private final IEstadoExpedienteRepository IestadoExpedienteRepository;
-    private final IAreaRepository IareaRepository;
+    private final IDocumentoRepository documentoRepository;
+    private final IUsuarioRepository usuarioRepository;
+    private final ITipoDocumentoRepository tipoDocumentoRepository;
+    private final IEstadoExpedienteRepository estadoExpedienteRepository;
+    private final IAreaRepository areaRepository;
+    private final IHistorialRepository historialRepository;
     
-    public DocumentoService(IDocumentoRepository IdocumentoRepository,
-                        IUsuarioRepository IusuarioRepository,
-                        ITipoDocumentoRepository ItipoDocumentoRepository,
-                        IEstadoExpedienteRepository IestadoExpedienteRepository,
-                        IAreaRepository IareaRepository) {
-        this.IdocumentoRepository = IdocumentoRepository;
-        this.IusuarioRepository = IusuarioRepository;
-        this.ItipoDocumentoRepository = ItipoDocumentoRepository;
-        this.IestadoExpedienteRepository = IestadoExpedienteRepository;
-        this.IareaRepository = IareaRepository;
+    public DocumentoService(IDocumentoRepository documentoRepository,
+                        IUsuarioRepository usuarioRepository,
+                        ITipoDocumentoRepository tipoDocumentoRepository,
+                        IEstadoExpedienteRepository estadoExpedienteRepository,
+                        IAreaRepository areaRepository,
+                        IHistorialRepository historialRepository) {
+        this.documentoRepository = documentoRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.tipoDocumentoRepository = tipoDocumentoRepository;
+        this.estadoExpedienteRepository = estadoExpedienteRepository;
+        this.areaRepository = areaRepository;
+        this.historialRepository = historialRepository;
     }
     
+    @Override
     public Documento crear(DocumentoRequest request) {
-        TipoDocumento tipoDocumento = ItipoDocumentoRepository.findById(request.getTipoDocumentoId())
-                .orElseThrow(() -> new RuntimeException("Tipo de documento no encontrado"));
+        TipoDocumento tipoDocumento = tipoDocumentoRepository.findById(request.getTipoDocumentoId())
+                .orElseThrow(() -> new TipoDocumentoNotFoundException(request.getTipoDocumentoId()));
         
-        Usuario usuarioElabora = IusuarioRepository.findById(request.getUsuarioElaboraId())
-                .orElseThrow(() -> new RuntimeException("Usuario elabora no encontrado"));
+        Usuario usuarioElabora = usuarioRepository.findById(request.getUsuarioElaboraId())
+                .orElseThrow(() -> new UsuarioNotFoundException(String.valueOf(request.getUsuarioElaboraId())));
         
-        EstadoExpedienteEntity estado = IestadoExpedienteRepository.findById(request.getEstadoId())
-                .orElseThrow(() -> new RuntimeException("Estado no encontrado"));
+        EstadoExpedienteEntity estado = estadoExpedienteRepository.findById(request.getEstadoId())
+                .orElseThrow(() -> new EstadoNotFoundException(request.getEstadoId()));
         
         Documento documento = Documento.builder()
                 .numeracion(request.getNumeracion())
@@ -53,87 +62,130 @@ public class DocumentoService {
                 .build();
         
         if (request.getUsuarioEnviaId() != null) {
-            documento.setUsuarioEnvia(IusuarioRepository.findById(request.getUsuarioEnviaId()).orElse(null));
+            documento.setUsuarioEnvia(usuarioRepository.findById(request.getUsuarioEnviaId()).orElse(null));
         }
         
         if (request.getAreaDestinoId() != null) {
-            documento.setAreaDestino(IareaRepository.findById(request.getAreaDestinoId()).orElse(null));
+            documento.setAreaDestino(areaRepository.findById(request.getAreaDestinoId()).orElse(null));
         }
         
         if (request.getUsuarioDestinoId() != null) {
-            documento.setUsuarioDestino(IusuarioRepository.findById(request.getUsuarioDestinoId()).orElse(null));
+            documento.setUsuarioDestino(usuarioRepository.findById(request.getUsuarioDestinoId()).orElse(null));
         }
         
         documento.setFechaHoraEnvio(request.getFechaHoraEnvio());
         
-        return IdocumentoRepository.save(documento);
+        return documentoRepository.save(documento);
     }
     
+    @Override
     public Documento actualizar(Integer id, DocumentoRequest request) {
-        Documento documento = IdocumentoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+        Documento documento = documentoRepository.findById(id)
+                .orElseThrow(() -> new DocumentoNotFoundException(id));
         
         documento.setNumeracion(request.getNumeracion());
         documento.setObservaciones(request.getObservaciones());
         documento.setRutaArchivoOriginal(request.getRutaArchivoOriginal());
         
-        return IdocumentoRepository.save(documento);
+        return documentoRepository.save(documento);
     }
     
+    @Override
     public void eliminar(Integer id) {
-        IdocumentoRepository.deleteById(id);
+        documentoRepository.deleteById(id);
     }
     
+    @Override
     public Documento buscarPorId(Integer id) {
-        return IdocumentoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+        return documentoRepository.findById(id)
+                .orElseThrow(() -> new DocumentoNotFoundException(id));
     }
     
+    @Override
     public List<Documento> listarTodos() {
-        return IdocumentoRepository.findAll();
+        return documentoRepository.findAll();
     }
     
+    @Override
     public List<Documento> listarPorUsuarioElabora(Integer usuarioId) {
-        return IdocumentoRepository.findByUsuarioElaboraId(usuarioId);
+        return documentoRepository.findByUsuarioElaboraId(usuarioId);
     }
     
+    @Override
     public List<Documento> listarPendientesPorArea(Integer areaId) {
-        return IdocumentoRepository.findPendientesByArea(areaId);
+        return documentoRepository.findPendientesByArea(areaId);
     }
     
+    @Override
     public List<Documento> listarPendientesPorUsuario(Integer usuarioId) {
-        return IdocumentoRepository.findPendientesByUsuario(usuarioId);
+        return documentoRepository.findPendientesByUsuario(usuarioId);
     }
     
+    @Override
     public Documento cambiarEstado(Integer id, Integer estadoId, String observaciones) {
-        Documento documento = IdocumentoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+        Documento documento = documentoRepository.findById(id)
+                .orElseThrow(() -> new DocumentoNotFoundException(id));
         
-        EstadoExpedienteEntity estado = IestadoExpedienteRepository.findById(estadoId)
-                .orElseThrow(() -> new RuntimeException("Estado no encontrado"));
+        Integer estadoAnteriorId = documento.getEstado() != null ? documento.getEstado().getId() : null;
+        
+        EstadoExpedienteEntity estado = estadoExpedienteRepository.findById(estadoId)
+                .orElseThrow(() -> new EstadoNotFoundException(estadoId));
         
         documento.setEstado(estado);
         if (observaciones != null) {
             documento.setObservaciones(observaciones);
         }
         
-        return IdocumentoRepository.save(documento);
+        Documento documentoGuardado = documentoRepository.save(documento);
+        
+        if (estadoAnteriorId != null) {
+            DocumentoHistorial historial = DocumentoHistorial.builder()
+                    .documentoId(id)
+                    .estadoAnteriorId(estadoAnteriorId)
+                    .estadoNuevoId(estadoId)
+                    .usuarioCambiaId(documento.getUsuarioElabora() != null ? documento.getUsuarioElabora().getId() : 0)
+                    .motivoCambio(observaciones)
+                    .build();
+            historialRepository.save(historial);
+        }
+        
+        return documentoGuardado;
     }
     
+    @Override
     public Documento derivar(Integer id, Integer areaDestinoId, Integer usuarioDestinoId) {
-        Documento documento = IdocumentoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+        Documento documento = documentoRepository.findById(id)
+                .orElseThrow(() -> new DocumentoNotFoundException(id));
+        
+        Integer estadoAnteriorId = documento.getEstado() != null ? documento.getEstado().getId() : null;
         
         if (areaDestinoId != null) {
-            documento.setAreaDestino(IareaRepository.findById(areaDestinoId).orElse(null));
+            documento.setAreaDestino(areaRepository.findById(areaDestinoId).orElse(null));
         }
         
         if (usuarioDestinoId != null) {
-            documento.setUsuarioDestino(IusuarioRepository.findById(usuarioDestinoId).orElse(null));
+            documento.setUsuarioDestino(usuarioRepository.findById(usuarioDestinoId).orElse(null));
         }
         
         documento.setFechaHoraEnvio(LocalDateTime.now().toString());
         
-        return IdocumentoRepository.save(documento);
+        Documento documentoGuardado = documentoRepository.save(documento);
+        
+        EstadoExpedienteEntity estadoIngresado = estadoExpedienteRepository.findByNombre("INGRESADO").orElse(null);
+        if (estadoIngresado != null && estadoAnteriorId != null && !estadoAnteriorId.equals(estadoIngresado.getId())) {
+            documento.setEstado(estadoIngresado);
+            documentoRepository.save(documento);
+            
+            DocumentoHistorial historial = DocumentoHistorial.builder()
+                    .documentoId(id)
+                    .estadoAnteriorId(estadoAnteriorId)
+                    .estadoNuevoId(estadoIngresado.getId())
+                    .usuarioCambiaId(documento.getUsuarioElabora() != null ? documento.getUsuarioElabora().getId() : 0)
+                    .motivoCambio("Derivación a área/usuario destino")
+                    .build();
+            historialRepository.save(historial);
+        }
+        
+        return documentoGuardado;
     }
 }

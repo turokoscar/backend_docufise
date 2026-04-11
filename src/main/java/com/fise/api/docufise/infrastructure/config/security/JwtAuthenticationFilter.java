@@ -1,6 +1,7 @@
 package com.fise.api.docufise.infrastructure.config.security;
 
 import com.fise.api.docufise.domain.model.Usuario;
+import com.fise.api.docufise.domain.ports.output.IJwtTokenProvider;
 import com.fise.api.docufise.domain.repository.IUsuarioRepository;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,12 +19,16 @@ import java.util.Collections;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
-    private final JwtTokenProvider tokenProvider;
-    private final IUsuarioRepository IusuarioRepository;
+    private final IJwtTokenProvider tokenProvider;
+    private final IUsuarioRepository usuarioRepository;
+    private final TokenBlacklistService tokenBlacklistService;
     
-    public JwtAuthenticationFilter(JwtTokenProvider tokenProvider, IUsuarioRepository IusuarioRepository) {
+    public JwtAuthenticationFilter(IJwtTokenProvider tokenProvider, 
+                             IUsuarioRepository usuarioRepository,
+                             TokenBlacklistService tokenBlacklistService) {
         this.tokenProvider = tokenProvider;
-        this.IusuarioRepository = IusuarioRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
     
     @Override
@@ -33,9 +38,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = getJwtFromRequest(request);
         
         if (StringUtils.hasText(token) && tokenProvider.validateToken(token)) {
+            if (tokenBlacklistService.isTokenRevoked(token)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+            
             String username = tokenProvider.getUsernameFromToken(token);
             
-            IusuarioRepository.findByNombreUsuario(username).ifPresent(usuario -> {
+            usuarioRepository.findByNombreUsuario(username).ifPresent(usuario -> {
                 UsernamePasswordAuthenticationToken authentication = 
                         new UsernamePasswordAuthenticationToken(
                                 usuario,

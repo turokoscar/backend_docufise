@@ -1,15 +1,18 @@
 package com.fise.api.docufise.infrastructure.config.security;
 
+import com.fise.api.docufise.domain.ports.output.IJwtTokenProvider;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 
 @Component
-public class JwtTokenProvider {
+public class JwtTokenProvider implements IJwtTokenProvider {
     
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -22,6 +25,7 @@ public class JwtTokenProvider {
         return Keys.hmacShaKeyFor(keyBytes);
     }
     
+    @Override
     public String generateToken(String username) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpiration);
@@ -34,6 +38,7 @@ public class JwtTokenProvider {
                 .compact();
     }
     
+    @Override
     public String getUsernameFromToken(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -43,6 +48,7 @@ public class JwtTokenProvider {
         return claims.getSubject();
     }
     
+    @Override
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -53,5 +59,16 @@ public class JwtTokenProvider {
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
+    }
+    
+    @Override
+    public LocalDateTime getExpirationDate(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        Date expiration = claims.getExpiration();
+        return expiration.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
 }
