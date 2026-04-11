@@ -89,6 +89,7 @@ public class AuthService implements AuthInputPort {
                 .nombreCompleto(usuario.getNombreCompleto())
                 .correo(usuario.getCorreo())
                 .rol(usuario.getRol() != null ? usuario.getRol().getNombre() : null)
+                .rolId(usuario.getRol() != null ? usuario.getRol().getId() : null)
                 .area(usuario.getArea() != null ? usuario.getArea().getNombre() : null)
                 .build();
     }

@@ -21,12 +21,25 @@ spring:
         format_sql: true
 
 jwt:
-  secret: docufise-secret-key-2026-fise-project-springboot-jwt-auth
+  secret: docufise-secret-key-2026-fise-project-springboot-jwt-authentication-secure-key-min-512-bits
   expiration: 86400000  # 24 horas en milisegundos
 
 file:
   upload-dir: ./uploads
-  
+
+# OpenAPI / Swagger Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    doc-expansion: none
+    try-it-out-enabled: true
+    filter: true
+    show-auth-extensions: true
+
 logging:
   level:
     com.fise.docufise: DEBUG

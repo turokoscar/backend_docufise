@@ -16,5 +16,6 @@ public class LoginResponse {
     private String nombreCompleto;
     private String correo;
     private String rol;
+    private Integer rolId;
     private String area;
 }
