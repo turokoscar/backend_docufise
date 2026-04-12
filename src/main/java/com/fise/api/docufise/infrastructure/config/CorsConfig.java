@@ -12,12 +12,17 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
     
-    @Value("${security.cors.allowed-origins}")
-    private List<String> allowedOrigins;
+    @Value("${security.cors.allowed-origins:http://localhost:4200,http://127.0.0.1:4200}")
+    private String allowedOriginsString;
     
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        
+        List<String> allowedOrigins = Arrays.asList(allowedOriginsString.split(","));
+        System.out.println("=== CORS CONFIG ===");
+        System.out.println("Allowed origins: " + allowedOrigins);
+        
         configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));

@@ -10,8 +10,9 @@ import java.nio.file.Path;
 @SpringBootApplication
 public class ApiDocufiseApplication {
     public static void main(String[] args) {
-        // Cargar .env si existe para desarrollo local
-        if (Files.exists(Path.of(".env"))) {
+        Path envPath = Path.of(".env");
+        if (Files.exists(envPath)) {
+            System.out.println("Loading .env file...");
             Dotenv dotenv = Dotenv.configure().load();
             dotenv.entries().forEach(entry -> {
                 System.setProperty(entry.getKey(), entry.getValue());
