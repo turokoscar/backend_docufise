@@ -1,16 +1,16 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
   servlet:
-    context-path: /api/v1
+    context-path: ${CONTEXT_PATH:/api/v1}
 
 spring:
   application:
     name: docufise
   
   datasource:
-    url: jdbc:mysql://localhost:3306/BD_DOCUFISE_DEV?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: root
-    password: 12345678
+    url: ${DB_URL:jdbc:mysql://localhost:3306/BD_DOCUFISE_DEV?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:12345678}
     driver-class-name: com.mysql.cj.jdbc.Driver
   
   jpa:
@@ -31,30 +31,33 @@ spring:
     default-property-inclusion: non_null
 
 jwt:
-  secret: docufise-secret-key-2026-fise-project-springboot-jwt-authentication-secure-key-min-512-bits
-  expiration: 86400000
+  secret: ${JWT_SECRET:docufise-secret-key-2026-fise-project-springboot-jwt-authentication-secure-key-min-512-bits}
+  expiration: ${JWT_EXPIRATION:86400000}
 
 file:
   storage:
-    type: local  # local, sftp, s3
-    base-path: uploads
+    type: ${STORAGE_TYPE:local}
+    base-path: ${STORAGE_BASE_PATH:uploads}
     allowed-extensions: pdf,doc,docx,xls,xlsx,png,jpg,jpeg
-    max-size: 52428800  # 50MB en bytes
-    # Configuración para SFTP (si type=sftp)
+    max-size: 52428800
     sftp:
-      host: localhost
-      port: 22
-      username: docufise
-      password: ""
-      remote-path: /uploads/docufise
-      private-key-path: ""
-    # Configuración para AWS S3 (si type=s3)
+      host: ${SFTP_HOST:localhost}
+      port: ${SFTP_PORT:22}
+      username: ${SFTP_USER:docufise}
+      password: ${SFTP_PASS:""}
+      remote-path: ${SFTP_REMOTE_PATH:/uploads/docufise}
     s3:
-      bucket: docufise-bucket
-      region: us-east-1
-      access-key: ""
-      secret-key: ""
-      endpoint: ""
+      bucket: ${S3_BUCKET:docufise-bucket}
+      region: ${S3_REGION:us-east-1}
+      access-key: ${S3_ACCESS_KEY:""}
+      secret-key: ${S3_SECRET_KEY:""}
+
+security:
+  login:
+    max-attempts: ${MAX_LOGIN_ATTEMPTS:3}
+    lockout-minutes: ${LOCKOUT_MINUTES:15}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://127.0.0.1:4200}
 
 springdoc:
   api-docs:
@@ -70,5 +73,5 @@ springdoc:
 
 logging:
   level:
-    com.fise.docufise: DEBUG
+    com.fise.docufise: ${LOGGING_LEVEL:DEBUG}
     org.springframework.security: INFO

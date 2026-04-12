@@ -52,7 +52,7 @@ public class AuthService implements AuthInputPort {
                 throw new UsuarioInactivoException();
             }
             if (validacion.mensaje().contains("bloqueado")) {
-                throw new UsuarioBloqueadoException(SeguridadService.getMinutosBloqueo());
+                throw new UsuarioBloqueadoException(seguridadService.getMinutosBloqueo());
             }
             throw new UsuarioNotFoundException(request.getNombreUsuario());
         }
@@ -65,8 +65,8 @@ public class AuthService implements AuthInputPort {
         if (!passwordEncoder.matches(request.getContrasena(), usuario.getContrasenaHash())) {
             seguridadService.registrarIntentoFallido(usuario);
             
-            if (usuario.getIntentosFallo() != null && usuario.getIntentosFallo() >= SeguridadService.getMaxIntentosFallidos()) {
-                throw new MaximosIntentosExcedidosException(SeguridadService.getMaxIntentosFallidos());
+            if (usuario.getIntentosFallo() != null && usuario.getIntentosFallo() >= seguridadService.getMaxIntentosFallidos()) {
+                throw new MaximosIntentosExcedidosException(seguridadService.getMaxIntentosFallidos());
             }
             throw new InvalidCredentialsException();
         }
