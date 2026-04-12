@@ -50,12 +50,13 @@ public class FirmaService implements FirmaInputPort {
                 .rutaArchivoOriginal(request.getRutaArchivoOriginal())
                 .build();
         
-        return firmaRepository.save(firma);
+        Firma savedFirma = firmaRepository.save(firma);
+        return firmaRepository.findByIdWithRelations(savedFirma.getId()).orElse(savedFirma);
     }
     
     @Override
     public Firma marcarDescargado(Integer id, String ip) {
-        Firma firma = firmaRepository.findById(id)
+        Firma firma = firmaRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new FirmaNotFoundException(id));
         
         firma.setFechaDescarga(LocalDateTime.now());
@@ -70,7 +71,7 @@ public class FirmaService implements FirmaInputPort {
     
     @Override
     public Firma firmar(Integer id, String rutaArchivoFirmado, String ip) {
-        Firma firma = firmaRepository.findById(id)
+        Firma firma = firmaRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new FirmaNotFoundException(id));
         
         EstadoExpedienteEntity estado = estadoExpedienteRepository.findByNombre("FIRMADO")
@@ -81,12 +82,19 @@ public class FirmaService implements FirmaInputPort {
         firma.setIpFirma(ip);
         firma.setEstado(estado);
         
+        // Sincronizar estado del documento principal
+        if (firma.getDocumento() != null) {
+            firma.getDocumento().setEstado(estado);
+            firma.getDocumento().setRutaArchivoFirmado(rutaArchivoFirmado);
+            documentoRepository.save(firma.getDocumento());
+        }
+        
         return firmaRepository.save(firma);
     }
     
     @Override
     public Firma rechazar(Integer id, String motivoRechazo, String ip) {
-        Firma firma = firmaRepository.findById(id)
+        Firma firma = firmaRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new FirmaNotFoundException(id));
         
         EstadoExpedienteEntity estado = estadoExpedienteRepository.findByNombre("OBSERVADO")
@@ -95,6 +103,12 @@ public class FirmaService implements FirmaInputPort {
         firma.setMotivoRechazo(motivoRechazo);
         firma.setIpFirma(ip);
         firma.setEstado(estado);
+        
+        // Sincronizar estado del documento principal
+        if (firma.getDocumento() != null) {
+            firma.getDocumento().setEstado(estado);
+            documentoRepository.save(firma.getDocumento());
+        }
         
         return firmaRepository.save(firma);
     }

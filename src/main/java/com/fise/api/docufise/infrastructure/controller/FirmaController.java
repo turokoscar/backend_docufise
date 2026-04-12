@@ -135,4 +135,18 @@ public class FirmaController {
         }
         return ResponseEntity.notFound().build();
     }
+
+    @Operation(summary = "Descargar documento firmado", description = "Descargar el documento con la firma aplicada")
+    @GetMapping("/{id}/descargar-firmado")
+    public ResponseEntity<byte[]> descargarDocumentoFirmado(@Parameter(example = "1") @PathVariable Integer id) {
+        Firma firma = firmaInputPort.buscarPorId(id);
+        if (firma.getRutaArchivoFirmado() != null) {
+            byte[] bytes = fileStorageService.getBytes(firma.getRutaArchivoFirmado());
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=\"" + firma.getDocumento().getNumeracion() + "_firmado.pdf\"")
+                    .header("Content-Type", "application/pdf")
+                    .body(bytes);
+        }
+        return ResponseEntity.notFound().build();
+    }
 }
