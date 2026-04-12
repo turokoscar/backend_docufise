@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/areas")
+@RequestMapping("/areas")
 @Tag(name = "Áreas", description = "Gestión de áreas organizacionales")
 public class AreaController {
     

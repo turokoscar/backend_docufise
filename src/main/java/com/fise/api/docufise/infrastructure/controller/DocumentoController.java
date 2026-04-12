@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/documentos")
+@RequestMapping("/documentos")
 @Tag(name = "Documentos", description = "Gestión de documentos y expedientes")
 public class DocumentoController {
     

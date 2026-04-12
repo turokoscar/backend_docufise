@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/tipos-documento")
+@RequestMapping("/tipos-documento")
 @Tag(name = "Tipos de Documento", description = "Gestión de tipos de documento")
 public class TipoDocumentoController {
     

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/usuarios")
+@RequestMapping("/usuarios")
 @Tag(name = "Usuarios", description = "Gestión de usuarios del sistema")
 public class UsuarioController {
     

@@ -16,7 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/api/v1/files")
+@RequestMapping("/files")
 @Tag(name = "Archivos", description = "Gestión de almacenamiento de archivos")
 public class FileController {
     

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/estados")
+@RequestMapping("/estados")
 @Tag(name = "Estados", description = "Gestión de estados de expediente")
 public class EstadoController {
     
