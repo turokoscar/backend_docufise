@@ -97,13 +97,13 @@ public class DocumentoService implements DocumentoInputPort {
     
     @Override
     public Documento buscarPorId(Integer id) {
-        return documentoRepository.findById(id)
+        return documentoRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new DocumentoNotFoundException(id));
     }
     
     @Override
     public List<Documento> listarTodos() {
-        return documentoRepository.findAll();
+        return documentoRepository.findAllWithRelations();
     }
     
     @Override

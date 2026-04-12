@@ -11,4 +11,5 @@ public interface IRolRepository {
     List<Rol> findAll();
     void deleteById(Integer id);
     boolean existsById(Integer id);
+    List<Object[]> findRolMenusWithMenuByRolId(Integer rolId);
 }

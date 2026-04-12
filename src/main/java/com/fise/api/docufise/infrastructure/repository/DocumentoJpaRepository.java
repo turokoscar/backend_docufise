@@ -15,7 +15,16 @@ public interface DocumentoJpaRepository extends JpaRepository<Documento, Integer
     
     Optional<Documento> findByNumeracion(String numeracion);
     boolean existsByNumeracion(String numeracion);
-    List<Documento> findByUsuarioElaboraId(Integer usuarioId);
+    
+    @Query("SELECT d FROM Documento d LEFT JOIN FETCH d.tipoDocumento LEFT JOIN FETCH d.usuarioElabora LEFT JOIN FETCH d.usuarioEnvia LEFT JOIN FETCH d.estado LEFT JOIN FETCH d.areaDestino LEFT JOIN FETCH d.usuarioDestino")
+    List<Documento> findAllWithRelations();
+    
+    @Query("SELECT d FROM Documento d LEFT JOIN FETCH d.tipoDocumento LEFT JOIN FETCH d.usuarioElabora LEFT JOIN FETCH d.usuarioEnvia LEFT JOIN FETCH d.estado LEFT JOIN FETCH d.areaDestino LEFT JOIN FETCH d.usuarioDestino WHERE d.id = :id")
+    Optional<Documento> findByIdWithRelations(@Param("id") Integer id);
+    
+    @Query("SELECT d FROM Documento d LEFT JOIN FETCH d.tipoDocumento LEFT JOIN FETCH d.usuarioElabora LEFT JOIN FETCH d.usuarioEnvia LEFT JOIN FETCH d.estado LEFT JOIN FETCH d.areaDestino LEFT JOIN FETCH d.usuarioDestino WHERE d.usuarioElabora.id = :usuarioId")
+    List<Documento> findByUsuarioElaboraId(@Param("usuarioId") Integer usuarioId);
+    
     List<Documento> findByUsuarioEnviaId(Integer usuarioId);
     List<Documento> findByUsuarioDestinoId(Integer usuarioId);
     List<Documento> findByAreaDestinoId(Integer areaId);
@@ -24,9 +33,9 @@ public interface DocumentoJpaRepository extends JpaRepository<Documento, Integer
     @Query("SELECT d FROM Documento d WHERE d.estado.nombre = :estado")
     List<Documento> findByEstadoNombre(@Param("estado") String estado);
     
-    @Query("SELECT d FROM Documento d WHERE d.areaDestino.id = :areaId AND d.estado.nombre IN ('PENDIENTE', 'OBSERVADO')")
+    @Query("SELECT d FROM Documento d LEFT JOIN FETCH d.tipoDocumento LEFT JOIN FETCH d.usuarioElabora LEFT JOIN FETCH d.usuarioEnvia LEFT JOIN FETCH d.estado LEFT JOIN FETCH d.areaDestino LEFT JOIN FETCH d.usuarioDestino WHERE d.areaDestino.id = :areaId AND d.estado.nombre IN ('PENDIENTE', 'OBSERVADO')")
     List<Documento> findPendientesByArea(@Param("areaId") Integer areaId);
     
-    @Query("SELECT d FROM Documento d WHERE d.usuarioDestino.id = :usuarioId AND d.estado.nombre IN ('PENDIENTE', 'OBSERVADO')")
+    @Query("SELECT d FROM Documento d LEFT JOIN FETCH d.tipoDocumento LEFT JOIN FETCH d.usuarioElabora LEFT JOIN FETCH d.usuarioEnvia LEFT JOIN FETCH d.estado LEFT JOIN FETCH d.areaDestino LEFT JOIN FETCH d.usuarioDestino WHERE d.usuarioDestino.id = :usuarioId AND d.estado.nombre IN ('PENDIENTE', 'OBSERVADO')")
     List<Documento> findPendientesByUsuario(@Param("usuarioId") Integer usuarioId);
 }

@@ -2,6 +2,7 @@ package com.fise.api.docufise.domain.model;
 
 import lombok.*;
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "rol_menu")
@@ -9,18 +10,25 @@ import javax.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@IdClass(RolMenuId.class)
 public class RolMenu {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    @Column(name = "ide_rol")
+    private Integer ide_rol;
     
-    @Column(name = "rol_id", nullable = false)
-    private Integer rolId;
+    @Id
+    @Column(name = "ide_menu")
+    private Integer ide_menu;
     
-    @Column(name = "menu_id", nullable = false)
-    private Integer menuId;
-    
-    @Column(length = 20)
+    @Column(name = "txt_permiso", length = 20)
     private String permiso;
+    
+    @Column(name = "fec_registro")
+    private LocalDateTime fec_registro;
+    
+    @PrePersist
+    protected void onCreate() {
+        fec_registro = LocalDateTime.now();
+    }
 }

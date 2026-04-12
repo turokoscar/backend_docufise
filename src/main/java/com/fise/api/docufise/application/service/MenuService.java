@@ -1,15 +1,16 @@
 package com.fise.api.docufise.application.service;
 
 import com.fise.api.docufise.domain.model.Menu;
-import com.fise.api.docufise.domain.model.Rol;
 import com.fise.api.docufise.domain.ports.input.IMenuInputPort;
 import com.fise.api.docufise.domain.repository.IMenuRepository;
 import com.fise.api.docufise.domain.repository.IRolRepository;
+import com.fise.api.docufise.shared.dto.MenuResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -30,9 +31,41 @@ public class MenuService implements IMenuInputPort {
     
     @Override
     public List<Menu> listarPorRol(Integer rolId) {
-        Rol rol = rolRepository.findById(rolId)
-                .orElseThrow(() -> new NoSuchElementException("Rol no encontrado con ID: " + rolId));
-        return rol.getMenus() != null ? rol.getMenus() : Collections.emptyList();
+        List<Object[]> results = rolRepository.findRolMenusWithMenuByRolId(rolId);
+        
+        if (results == null || results.isEmpty()) {
+            return Collections.emptyList();
+        }
+        
+        return results.stream()
+                .map(row -> (Menu) row[3])
+                .filter(m -> m != null)
+                .collect(Collectors.toList());
+    }
+    
+    public List<MenuResponse> listarPorRolConPermiso(Integer rolId) {
+        List<Object[]> results = rolRepository.findRolMenusWithMenuByRolId(rolId);
+        
+        if (results == null || results.isEmpty()) {
+            return Collections.emptyList();
+        }
+        
+        return results.stream()
+                .filter(row -> row[3] != null)
+                .map(row -> {
+                    Menu menu = (Menu) row[3];
+                    String permiso = (String) row[2];
+                    return MenuResponse.builder()
+                            .id(menu.getId())
+                            .nombre(menu.getNombre())
+                            .ruta(menu.getRuta())
+                            .icono(menu.getIcono())
+                            .orden(menu.getOrden())
+                            .activo(menu.getActivo())
+                            .permiso(permiso)
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
     
     @Override

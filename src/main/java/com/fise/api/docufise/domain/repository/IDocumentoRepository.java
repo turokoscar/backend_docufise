@@ -18,7 +18,9 @@ public interface IDocumentoRepository {
     List<Documento> findByFechaElaboracionBetween(LocalDate inicio, LocalDate fin);
     Documento save(Documento documento);
     Optional<Documento> findById(Integer id);
+    Optional<Documento> findByIdWithRelations(Integer id);
     List<Documento> findAll();
+    List<Documento> findAllWithRelations();
     void deleteById(Integer id);
     boolean existsById(Integer id);
 }

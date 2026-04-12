@@ -10,6 +10,7 @@ public interface IFirmaRepository {
     List<Firma> findByUsuarioAndEstado(Integer usuarioId, String estado);
     Optional<Firma> findByDocumentoIdAndUsuarioAsignadoId(Integer documentoId, Integer usuarioId);
     List<Firma> findPendientesByUsuario(Integer usuarioId);
+    Optional<Firma> findByIdWithRelations(Integer id);
     Firma save(Firma firma);
     Optional<Firma> findById(Integer id);
     List<Firma> findAll();

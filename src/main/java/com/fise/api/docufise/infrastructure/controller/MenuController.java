@@ -3,6 +3,7 @@ package com.fise.api.docufise.infrastructure.controller;
 import com.fise.api.docufise.domain.model.Menu;
 import com.fise.api.docufise.domain.ports.input.IMenuInputPort;
 import com.fise.api.docufise.shared.dto.ApiResponse;
+import com.fise.api.docufise.shared.dto.MenuResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,10 +29,10 @@ public class MenuController {
         return ResponseEntity.ok(ApiResponse.ok(menus, "Listado de menús", menus.size()));
     }
     
-    @Operation(summary = "Listar menús por rol", description = "Retorna los menús asignados a un rol específico")
+    @Operation(summary = "Listar menús por rol", description = "Retorna los menús asignados a un rol específico con su permiso")
     @GetMapping("/rol/{rolId}")
-    public ResponseEntity<ApiResponse<List<Menu>>> listarPorRol(@Parameter(example = "1") @PathVariable Integer rolId) {
-        List<Menu> menus = menuInputPort.listarPorRol(rolId);
+    public ResponseEntity<ApiResponse<List<MenuResponse>>> listarPorRol(@Parameter(example = "1") @PathVariable Integer rolId) {
+        List<MenuResponse> menus = menuInputPort.listarPorRolConPermiso(rolId);
         return ResponseEntity.ok(ApiResponse.ok(menus, "Menús del rol", menus.size()));
     }
     

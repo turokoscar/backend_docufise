@@ -21,15 +21,39 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
+    open-in-view: false
+
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+    default-property-inclusion: non_null
 
 jwt:
   secret: docufise-secret-key-2026-fise-project-springboot-jwt-authentication-secure-key-min-512-bits
-  expiration: 86400000  # 24 horas en milisegundos
+  expiration: 86400000
 
 file:
-  upload-dir: ./uploads
+  storage:
+    type: local  # local, sftp, s3
+    base-path: uploads
+    allowed-extensions: pdf,doc,docx,xls,xlsx,png,jpg,jpeg
+    max-size: 52428800  # 50MB en bytes
+    # Configuración para SFTP (si type=sftp)
+    sftp:
+      host: localhost
+      port: 22
+      username: docufise
+      password: ""
+      remote-path: /uploads/docufise
+      private-key-path: ""
+    # Configuración para AWS S3 (si type=s3)
+    s3:
+      bucket: docufise-bucket
+      region: us-east-1
+      access-key: ""
+      secret-key: ""
+      endpoint: ""
 
-# OpenAPI / Swagger Configuration
 springdoc:
   api-docs:
     path: /v3/api-docs

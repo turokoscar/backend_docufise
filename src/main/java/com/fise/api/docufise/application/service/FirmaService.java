@@ -104,4 +104,10 @@ public class FirmaService implements FirmaInputPort {
     public List<Firma> listarPendientes(Integer usuarioId) {
         return firmaRepository.findPendientesByUsuario(usuarioId);
     }
+
+    @Override
+    public Firma buscarPorId(Integer id) {
+        return firmaRepository.findByIdWithRelations(id)
+                .orElseThrow(() -> new FirmaNotFoundException(id));
+    }
 }

@@ -8,6 +8,8 @@ public interface FirmaInputPort {
     
     Firma crear(FirmaRequest request);
     
+    Firma buscarPorId(Integer id);
+    
     Firma marcarDescargado(Integer id, String ip);
     
     Firma firmar(Integer id, String rutaArchivoFirmado, String ip);

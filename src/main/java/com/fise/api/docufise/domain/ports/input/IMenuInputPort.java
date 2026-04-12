@@ -1,11 +1,13 @@
 package com.fise.api.docufise.domain.ports.input;
 
 import com.fise.api.docufise.domain.model.Menu;
+import com.fise.api.docufise.shared.dto.MenuResponse;
 import java.util.List;
 
 public interface IMenuInputPort {
     List<Menu> listarTodos();
     List<Menu> listarPorRol(Integer rolId);
+    List<MenuResponse> listarPorRolConPermiso(Integer rolId);
     Menu buscarPorId(Integer id);
     Menu crear(Menu menu);
     Menu actualizar(Integer id, Menu menu);
