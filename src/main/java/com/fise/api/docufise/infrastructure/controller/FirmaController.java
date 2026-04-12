@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -119,12 +120,16 @@ public class FirmaController {
     
     @Operation(summary = "Descargar documento original", description = "Descargar el documento a firmar")
     @GetMapping("/{id}/descargar-archivo")
-    public ResponseEntity<byte[]> descargarDocumento(@Parameter(example = "1") @PathVariable Integer id) {
+    public ResponseEntity<byte[]> descargarDocumento(@Parameter(example = "1") @PathVariable Integer id, HttpServletRequest request) {
         Firma firma = firmaInputPort.buscarPorId(id);
         if (firma.getDocumento() != null && firma.getDocumento().getRutaArchivoOriginal() != null) {
+            // Marcar como descargado automáticamente para cambiar estado a PENDIENTE
+            String ip = request.getRemoteAddr();
+            firmaInputPort.marcarDescargado(id, ip);
+            
             byte[] bytes = fileStorageService.getBytes(firma.getDocumento().getRutaArchivoOriginal());
             return ResponseEntity.ok()
-                    .header("Content-Disposition", "attachment; filename=\"documento.pdf\"")
+                    .header("Content-Disposition", "attachment; filename=\"" + firma.getDocumento().getNumeracion() + ".pdf\"")
                     .header("Content-Type", "application/pdf")
                     .body(bytes);
         }

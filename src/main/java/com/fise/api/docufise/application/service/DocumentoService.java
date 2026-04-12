@@ -25,19 +25,22 @@ public class DocumentoService implements DocumentoInputPort {
     private final IEstadoExpedienteRepository estadoExpedienteRepository;
     private final IAreaRepository areaRepository;
     private final IHistorialRepository historialRepository;
+    private final IFirmaRepository firmaRepository;
     
     public DocumentoService(IDocumentoRepository documentoRepository,
                         IUsuarioRepository usuarioRepository,
                         ITipoDocumentoRepository tipoDocumentoRepository,
                         IEstadoExpedienteRepository estadoExpedienteRepository,
                         IAreaRepository areaRepository,
-                        IHistorialRepository historialRepository) {
+                        IHistorialRepository historialRepository,
+                        IFirmaRepository firmaRepository) {
         this.documentoRepository = documentoRepository;
         this.usuarioRepository = usuarioRepository;
         this.tipoDocumentoRepository = tipoDocumentoRepository;
         this.estadoExpedienteRepository = estadoExpedienteRepository;
         this.areaRepository = areaRepository;
         this.historialRepository = historialRepository;
+        this.firmaRepository = firmaRepository;
     }
     
     @Override
@@ -123,7 +126,7 @@ public class DocumentoService implements DocumentoInputPort {
     
     @Override
     public Documento cambiarEstado(Integer id, Integer estadoId, String observaciones) {
-        Documento documento = documentoRepository.findById(id)
+        Documento documento = documentoRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new DocumentoNotFoundException(id));
         
         Integer estadoAnteriorId = documento.getEstado() != null ? documento.getEstado().getId() : null;
@@ -153,8 +156,8 @@ public class DocumentoService implements DocumentoInputPort {
     }
     
     @Override
-    public Documento derivar(Integer id, Integer areaDestinoId, Integer usuarioDestinoId) {
-        Documento documento = documentoRepository.findById(id)
+    public Documento derivar(Integer id, Integer areaDestinoId, Integer usuarioDestinoId, Integer usuarioEnviaId) {
+        Documento documento = documentoRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new DocumentoNotFoundException(id));
         
         Integer estadoAnteriorId = documento.getEstado() != null ? documento.getEstado().getId() : null;
@@ -166,24 +169,46 @@ public class DocumentoService implements DocumentoInputPort {
         if (usuarioDestinoId != null) {
             documento.setUsuarioDestino(usuarioRepository.findById(usuarioDestinoId).orElse(null));
         }
+
+        if (usuarioEnviaId != null) {
+            documento.setUsuarioEnvia(usuarioRepository.findById(usuarioEnviaId).orElse(null));
+        }
         
-        documento.setFechaHoraEnvio(LocalDateTime.now().toString());
-        
-        Documento documentoGuardado = documentoRepository.save(documento);
+        // Formatear fecha como yyyy-MM-dd HH:mm
+        LocalDateTime now = LocalDateTime.now();
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        documento.setFechaHoraEnvio(now.format(formatter));
         
         EstadoExpedienteEntity estadoIngresado = estadoExpedienteRepository.findByNombre("INGRESADO").orElse(null);
-        if (estadoIngresado != null && estadoAnteriorId != null && !estadoAnteriorId.equals(estadoIngresado.getId())) {
+        if (estadoIngresado != null) {
             documento.setEstado(estadoIngresado);
-            documentoRepository.save(documento);
-            
+        }
+
+        Documento documentoGuardado = documentoRepository.save(documento);
+        
+        if (estadoIngresado != null && estadoAnteriorId != null) {
             DocumentoHistorial historial = DocumentoHistorial.builder()
                     .documentoId(id)
                     .estadoAnteriorId(estadoAnteriorId)
                     .estadoNuevoId(estadoIngresado.getId())
-                    .usuarioCambiaId(documento.getUsuarioElabora() != null ? documento.getUsuarioElabora().getId() : 0)
+                    .usuarioCambiaId(usuarioEnviaId != null ? usuarioEnviaId : 0)
                     .motivoCambio("Derivación a área/usuario destino")
                     .build();
             historialRepository.save(historial);
+        }
+
+        // Crear registro de Firma si se derivó a un usuario específico
+        if (usuarioDestinoId != null && estadoIngresado != null) {
+            Usuario usuarioAsignado = usuarioRepository.findById(usuarioDestinoId).orElse(null);
+            if (usuarioAsignado != null) {
+                Firma firma = Firma.builder()
+                        .documento(documentoGuardado)
+                        .usuarioAsignado(usuarioAsignado)
+                        .estado(estadoIngresado)
+                        .rutaArchivoOriginal(documentoGuardado.getRutaArchivoOriginal())
+                        .build();
+                firmaRepository.save(firma);
+            }
         }
         
         return documentoGuardado;

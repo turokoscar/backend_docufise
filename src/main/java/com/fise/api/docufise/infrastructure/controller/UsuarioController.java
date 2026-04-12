@@ -21,10 +21,15 @@ public class UsuarioController {
         this.usuarioInputPort = usuarioInputPort;
     }
     
-    @Operation(summary = "Listar usuarios", description = "Retorna todos los usuarios del sistema")
+    @Operation(summary = "Listar usuarios", description = "Retorna todos los usuarios del sistema, opcionalmente filtrados por área")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Usuario>>> listarTodos() {
-        List<Usuario> usuarios = usuarioInputPort.listarTodos();
+    public ResponseEntity<ApiResponse<List<Usuario>>> listarTodos(@RequestParam(required = false) Integer areaId) {
+        List<Usuario> usuarios;
+        if (areaId != null) {
+            usuarios = usuarioInputPort.listarPorArea(areaId);
+        } else {
+            usuarios = usuarioInputPort.listarTodos();
+        }
         return ResponseEntity.ok(ApiResponse.ok(usuarios, "Listado de usuarios", usuarios.size()));
     }
     

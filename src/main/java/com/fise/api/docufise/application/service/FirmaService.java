@@ -40,7 +40,7 @@ public class FirmaService implements FirmaInputPort {
         Usuario usuarioAsignado = usuarioRepository.findById(request.getUsuarioAsignadoId())
                 .orElseThrow(() -> new UsuarioNotFoundException(String.valueOf(request.getUsuarioAsignadoId())));
         
-        EstadoExpedienteEntity estado = estadoExpedienteRepository.findByNombre("PENDIENTE")
+        EstadoExpedienteEntity estado = estadoExpedienteRepository.findByNombre("INGRESADO")
                 .orElseThrow(() -> new EstadoNotFoundException(0));
         
         Firma firma = Firma.builder()
@@ -60,6 +60,10 @@ public class FirmaService implements FirmaInputPort {
         
         firma.setFechaDescarga(LocalDateTime.now());
         firma.setIpDescarga(ip);
+        
+        EstadoExpedienteEntity estado = estadoExpedienteRepository.findByNombre("PENDIENTE")
+                .orElseThrow(() -> new EstadoNotFoundException(0));
+        firma.setEstado(estado);
         
         return firmaRepository.save(firma);
     }

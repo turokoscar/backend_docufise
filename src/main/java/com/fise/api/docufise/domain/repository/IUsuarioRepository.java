@@ -14,6 +14,7 @@ public interface IUsuarioRepository {
     Usuario save(Usuario usuario);
     Optional<Usuario> findById(Integer id);
     List<Usuario> findAll();
+    List<Usuario> findByAreaId(Integer areaId);
     void deleteById(Integer id);
     boolean existsById(Integer id);
 }

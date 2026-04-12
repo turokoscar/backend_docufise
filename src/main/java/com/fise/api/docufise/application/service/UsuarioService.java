@@ -22,6 +22,11 @@ public class UsuarioService implements IUsuarioInputPort {
     public List<Usuario> listarTodos() {
         return usuarioRepository.findAll();
     }
+
+    @Override
+    public List<Usuario> listarPorArea(Integer areaId) {
+        return usuarioRepository.findByAreaId(areaId);
+    }
     
     @Override
     public Usuario buscarPorId(Integer id) {

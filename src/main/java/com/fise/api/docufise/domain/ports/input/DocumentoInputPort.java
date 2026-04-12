@@ -24,5 +24,5 @@ public interface DocumentoInputPort {
     
     Documento cambiarEstado(Integer id, Integer estadoId, String observaciones);
     
-    Documento derivar(Integer id, Integer areaDestinoId, Integer usuarioDestinoId);
+    Documento derivar(Integer id, Integer areaDestinoId, Integer usuarioDestinoId, Integer usuarioEnviaId);
 }

@@ -138,8 +138,9 @@ public class DocumentoController {
     @PatchMapping("/{id}/derivar")
     public ResponseEntity<com.fise.api.docufise.shared.dto.ApiResponse<DocumentoResponse>> derivar(@Parameter(example = "1") @PathVariable Integer id,
             @RequestParam(required = false) Integer areaDestinoId,
-            @RequestParam(required = false) Integer usuarioDestinoId) {
-        Documento doc = documentoInputPort.derivar(id, areaDestinoId, usuarioDestinoId);
+            @RequestParam(required = false) Integer usuarioDestinoId,
+            @RequestParam(required = false) Integer usuarioEnviaId) {
+        Documento doc = documentoInputPort.derivar(id, areaDestinoId, usuarioDestinoId, usuarioEnviaId);
         return ResponseEntity.ok(com.fise.api.docufise.shared.dto.ApiResponse.ok(documentoMapper.toDto(doc)));
     }
 }
