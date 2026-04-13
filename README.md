@@ -7,15 +7,14 @@ Sistema Integrado de Gestión de Expedientes y Firmas (SIGEF) - Backend API cons
 | Tecnología | Versión | Propósito |
 |------------|---------|----------|
 | Java | 17+ | Lenguaje de programación |
-| Spring Boot | 3.2.x | Framework principal |
-| Spring Security | 6.x | Autenticación y autorización |
-| Spring Data JPA | 3.x | Persistencia de datos |
+| Spring Boot | 2.7.x | Framework principal |
+| Spring Security | 5.x | Autenticación y autorización |
+| Spring Data JPA | 2.7.x | Persistencia de datos |
 | MySQL | 8.x | Base de datos relacional |
 | Gradle | 8.x | Gestión de dependencias |
 | JWT | - | Autenticación stateless |
-| Lombok | - | Reducción de boilerplate |
-| MapStruct | - | Mapeo de objetos |
-| Swagger/OpenAPI | 2.x | Documentación de API |
+| Lombok | 1.18.x | Reducción de boilerplate |
+| Swagger/OpenAPI | 1.7.x | Documentación de API |
 
 ## Arquitectura
 
@@ -58,13 +57,54 @@ cd backend_docufise
 
 ### 2. Configurar la base de datos
 
-Crear una base de datos MySQL:
+El proyecto incluye un script SQL completo en la raíz del proyecto: **`docufise.sql`**
+
+Este script crea:
+- Base de datos `BD_DOCUFISE_DEV`
+- Todas las tablas del sistema
+- Datos iniciales (estados, tipos de documento, áreas, roles, menús, usuarios)
+
+**Ejecutar con MySQL 8.4:**
+
+```bash
+# Conectar a MySQL como root
+mysql -u root -p
+
+# Ejecutar el script
+source docufise.sql
+```
+
+O directamente desde terminal:
+
+```bash
+mysql -u root -p < docufise.sql
+```
+
+**Verificar creación:**
 
 ```sql
-CREATE DATABASE docufise CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'docufise'@'localhost' IDENTIFIED BY 'docufise_password';
-GRANT ALL PRIVILEGES ON docufise.* TO 'docufise'@'localhost';
-FLUSH PRIVILEGES;
+USE BD_DOCUFISE_DEV;
+SHOW TABLES;
+SELECT * FROM usuario;
+```
+
+**Datos iniciales creados:**
+
+| Tabla | Descripción |
+|-------|-------------|
+| `estado_expediente` | Estados: REGISTRADO, INGRESADO, PENDIENTE, OBSERVADO, FIRMADO |
+| `tipo_documento` | Tipos: Carta, Informe, Resolución, Memorándum, Circular |
+| `area` | Secretaría General, Área Legal, Contable, RRHH |
+| `rol` | CTD, Firmante, Administrador |
+| `menu` | 8 opciones de menú |
+| `rol_menu` | Permisos por rol |
+| `usuario` | 3 usuarios de prueba (admin, ctd, firmante) |
+
+**Reset de base de datos:**
+
+```bash
+mysql -u root -p -e "DROP DATABASE IF EXISTS BD_DOCUFISE_DEV;"
+mysql -u root -p < docufise.sql
 ```
 
 ### 3. Configurar variables de entorno
@@ -164,7 +204,7 @@ Swagger UI disponible en: `http://localhost:8080/swagger-ui.html`
 - Contraseñas hasheadas con **BCrypt**
 - Tokens de refresh para sesiones prolongadas
 - CORS configurado para orígenes específicos
-- Rate limiting recomendado a nivel de infraestructura
+- Spring Security 5.x (compatible con Spring Boot 2.7.x)
 
 ## Estructura de Respuestas API
 
@@ -214,9 +254,18 @@ Swagger UI disponible en: `http://localhost:8080/swagger-ui.html`
 
 ## Despliegue en Apache Tomcat 9.0
 
-Spring Boot 3.x requiere **Tomcat 10.0+** para Jakarta EE 9+ (espacios de nombres `jakarta.*`). Para usar con **Tomcat 9.0**, se deben realizar ajustes.
+Spring Boot 2.7.x es **compatible de forma nativa con Tomcat 9.0**. Se puede usar el JAR embebido o deployar como WAR.
 
-### Opción 1: Deploy como WAR externo (Tomcat 9.0)
+### Opción 1: JAR embebido (Recomendado)
+
+Spring Boot incluye Tomcat embebido. Generar JAR y ejecutar:
+
+```bash
+./gradlew bootJar
+cp build/libs/docufise-api-1.0.0.jar $CATALINA_HOME/webapps/
+```
+
+### Opción 2: Deploy como WAR externo
 
 Modificar `build.gradle` para generar un WAR:
 
@@ -232,18 +281,7 @@ bootWar {
 }
 ```
 
-Configurar el contexto en `src/main/resources/application.properties`:
-
-```properties
-# Deshabilitar servidor embebido
-spring.boot.webapp.context-path=/docufise
-
-# Manejo de excepciones global
-server.error.include-message=always
-server.error.include-binding-errors=always
-```
-
-Crear clase de inicialización `ServletInitializer.java`:
+Crear clase de inicialización `ServletInitializer.java` (si no existe):
 
 ```java
 package com.fise.api.docufise;
@@ -263,21 +301,7 @@ Generar el WAR:
 
 ```bash
 ./gradlew bootWar
-```
-
-Copiar el WAR a Tomcat:
-
-```bash
 cp build/libs/docufise.war $CATALINA_HOME/webapps/
-```
-
-### Opción 2: Usar JAR portable (Recomendado)
-
-Spring Boot genera un JAR executable que incluye Tomcat embebido. Esta es la opción más simple.
-
-```bash
-./gradlew bootJar
-cp build/libs/docufise-api.jar $CATALINA_HOME/bin/
 ```
 
 Configurar `setenv.sh` (crear si no existe):
