@@ -244,6 +244,29 @@ public class DocumentoService implements DocumentoInputPort {
         
         List<EstadisticaResponse.EstadisticaMensual> tendenciaMensual = calcularTendenciaMensual(documentos, firmas);
         
+        // Calcular tendencias (Comparando el mes actual [index 5] vs mes anterior [index 4])
+        double tendenciaDocs = 0;
+        double tendenciaFirmados = 0;
+        double tendenciaPendientes = 0;
+        double tendenciaTasa = 0;
+
+        if (tendenciaMensual.size() >= 2) {
+            EstadisticaResponse.EstadisticaMensual actual = tendenciaMensual.get(5);
+            EstadisticaResponse.EstadisticaMensual anterior = tendenciaMensual.get(4);
+            
+            tendenciaDocs = calcularPorcentajeCambio(actual.getCantidadDocumentos(), anterior.getCantidadDocumentos());
+            tendenciaFirmados = calcularPorcentajeCambio(actual.getCantidadFirmas(), anterior.getCantidadFirmas());
+            
+            // Para pendientes y tasa, al ser calculados de forma más compleja, usaremos una aproximación basada en documentos nuevos vs firmas nuevas del mes
+            // En un sistema real esto se basaría en snapshots diarios, aquí usaremos la tendencia de actividad.
+            tendenciaPendientes = calcularPorcentajeCambio(actual.getCantidadDocumentos() - actual.getCantidadFirmas(), 
+                                                          anterior.getCantidadDocumentos() - anterior.getCantidadFirmas());
+            
+            double tasaActual = actual.getCantidadDocumentos() > 0 ? (double) actual.getCantidadFirmas() / actual.getCantidadDocumentos() * 100 : 0;
+            double tasaAnterior = anterior.getCantidadDocumentos() > 0 ? (double) anterior.getCantidadFirmas() / anterior.getCantidadDocumentos() * 100 : 0;
+            tendenciaTasa = tasaActual - tasaAnterior; // Diferencia de puntos porcentuales
+        }
+
         return EstadisticaResponse.builder()
             .totalDocumentos(totalDocumentos)
             .totalFirmados(totalFirmados)
@@ -252,8 +275,17 @@ public class DocumentoService implements DocumentoInputPort {
             .totalRegistrados(totalRegistrados)
             .totalIngresados(totalIngresados)
             .tasaFirma(tasaFirma)
+            .tendenciaTotalDocumentos(Math.round(tendenciaDocs * 10.0) / 10.0)
+            .tendenciaTotalFirmados(Math.round(tendenciaFirmados * 10.0) / 10.0)
+            .tendenciaTotalPendientes(Math.round(tendenciaPendientes * 10.0) / 10.0)
+            .tendenciaTasaFirma(Math.round(tendenciaTasa * 10.0) / 10.0)
             .tendenciaMensual(tendenciaMensual)
             .build();
+    }
+
+    private double calcularPorcentajeCambio(double actual, double anterior) {
+        if (anterior == 0) return actual > 0 ? 100.0 : 0.0;
+        return ((actual - anterior) / anterior) * 100.0;
     }
     
     private List<EstadisticaResponse.EstadisticaMensual> calcularTendenciaMensual(List<Documento> documentos, List<Firma> firmas) {

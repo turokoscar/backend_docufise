@@ -18,6 +18,10 @@ public class EstadisticaResponse {
     private int totalRegistrados;
     private int totalIngresados;
     private double tasaFirma;
+    private double tendenciaTotalDocumentos;
+    private double tendenciaTotalFirmados;
+    private double tendenciaTotalPendientes;
+    private double tendenciaTasaFirma;
     private List<EstadisticaMensual> tendenciaMensual;
     
     @Data
