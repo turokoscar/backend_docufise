@@ -2,6 +2,7 @@ package com.fise.api.docufise.domain.ports.input;
 
 import com.fise.api.docufise.domain.model.Documento;
 import com.fise.api.docufise.shared.dto.DocumentoRequest;
+import com.fise.api.docufise.shared.dto.EstadisticaResponse;
 import java.util.List;
 
 public interface DocumentoInputPort {
@@ -18,11 +19,13 @@ public interface DocumentoInputPort {
     
     List<Documento> listarPorUsuarioElabora(Integer usuarioId);
     
-    List<Documento> listarPendientesPorArea(Integer areaId);
+    List<Documento> listarPendientesPorArea(Integer usuarioId);
     
     List<Documento> listarPendientesPorUsuario(Integer usuarioId);
     
     Documento cambiarEstado(Integer id, Integer estadoId, String observaciones);
     
     Documento derivar(Integer id, Integer areaDestinoId, Integer usuarioDestinoId, Integer usuarioEnviaId);
+    
+    EstadisticaResponse getEstadisticas();
 }

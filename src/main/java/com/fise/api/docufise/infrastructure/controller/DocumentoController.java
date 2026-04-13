@@ -2,6 +2,7 @@ package com.fise.api.docufise.infrastructure.controller;
 
 import com.fise.api.docufise.shared.dto.DocumentoRequest;
 import com.fise.api.docufise.shared.dto.DocumentoResponse;
+import com.fise.api.docufise.shared.dto.EstadisticaResponse;
 import com.fise.api.docufise.domain.model.Documento;
 import com.fise.api.docufise.domain.ports.input.DocumentoInputPort;
 import com.fise.api.docufise.application.service.FileStorageService;
@@ -142,5 +143,12 @@ public class DocumentoController {
             @RequestParam(required = false) Integer usuarioEnviaId) {
         Documento doc = documentoInputPort.derivar(id, areaDestinoId, usuarioDestinoId, usuarioEnviaId);
         return ResponseEntity.ok(com.fise.api.docufise.shared.dto.ApiResponse.ok(documentoMapper.toDto(doc)));
+    }
+    
+    @Operation(summary = "Estadísticas generales", description = "Obtiene estadísticas y tendencia mensual de documentos y firmas")
+    @GetMapping("/estadisticas")
+    public ResponseEntity<com.fise.api.docufise.shared.dto.ApiResponse<EstadisticaResponse>> getEstadisticas() {
+        EstadisticaResponse estadisticas = documentoInputPort.getEstadisticas();
+        return ResponseEntity.ok(com.fise.api.docufise.shared.dto.ApiResponse.ok(estadisticas));
     }
 }

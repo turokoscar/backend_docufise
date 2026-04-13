@@ -7,11 +7,15 @@ import com.fise.api.docufise.domain.exception.UsuarioNotFoundException;
 import com.fise.api.docufise.domain.ports.input.DocumentoInputPort;
 import com.fise.api.docufise.shared.dto.DocumentoRequest;
 import com.fise.api.docufise.shared.dto.DocumentoResponse;
+import com.fise.api.docufise.shared.dto.EstadisticaResponse;
 import com.fise.api.docufise.domain.model.*;
 import com.fise.api.docufise.domain.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.TextStyle;
+import java.util.Locale;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -212,5 +216,77 @@ public class DocumentoService implements DocumentoInputPort {
         }
         
         return documentoGuardado;
+    }
+    
+    @Override
+    public EstadisticaResponse getEstadisticas() {
+        List<Documento> documentos = documentoRepository.findAll();
+        List<Firma> firmas = firmaRepository.findAll();
+        
+        int totalDocumentos = documentos.size();
+        int totalFirmados = (int) firmas.stream()
+            .filter(f -> f.getEstado() != null && "FIRMADO".equals(f.getEstado().getNombre()))
+            .count();
+        int totalPendientes = (int) documentos.stream()
+            .filter(d -> d.getEstado() != null && "PENDIENTE".equals(d.getEstado().getNombre()))
+            .count();
+        int totalObservados = (int) documentos.stream()
+            .filter(d -> d.getEstado() != null && "OBSERVADO".equals(d.getEstado().getNombre()))
+            .count();
+        int totalRegistrados = (int) documentos.stream()
+            .filter(d -> d.getEstado() != null && "REGISTRADO".equals(d.getEstado().getNombre()))
+            .count();
+        int totalIngresados = (int) documentos.stream()
+            .filter(d -> d.getEstado() != null && "INGRESADO".equals(d.getEstado().getNombre()))
+            .count();
+        
+        double tasaFirma = totalDocumentos > 0 ? Math.round((double) totalFirmados / totalDocumentos * 100) : 0;
+        
+        List<EstadisticaResponse.EstadisticaMensual> tendenciaMensual = calcularTendenciaMensual(documentos, firmas);
+        
+        return EstadisticaResponse.builder()
+            .totalDocumentos(totalDocumentos)
+            .totalFirmados(totalFirmados)
+            .totalPendientes(totalPendientes)
+            .totalObservados(totalObservados)
+            .totalRegistrados(totalRegistrados)
+            .totalIngresados(totalIngresados)
+            .tasaFirma(tasaFirma)
+            .tendenciaMensual(tendenciaMensual)
+            .build();
+    }
+    
+    private List<EstadisticaResponse.EstadisticaMensual> calcularTendenciaMensual(List<Documento> documentos, List<Firma> firmas) {
+        LocalDate hoy = LocalDate.now();
+        List<EstadisticaResponse.EstadisticaMensual> tendencia = new java.util.ArrayList<>();
+        
+        for (int i = 5; i >= 0; i--) {
+            LocalDate mes = hoy.minusMonths(i);
+            int anio = mes.getYear();
+            int mesNum = mes.getMonthValue();
+            String nombreMes = mes.getMonth().getDisplayName(TextStyle.SHORT, new Locale("es", "ES"));
+            String mesLabel = nombreMes.substring(0, 1).toUpperCase() + nombreMes.substring(1);
+            
+            final int mesFinal = mesNum;
+            final int anioFinal = anio;
+            
+            int cantidadDocs = (int) documentos.stream()
+                .filter(d -> d.getCreatedAt() != null)
+                .filter(d -> d.getCreatedAt().getYear() == anioFinal && d.getCreatedAt().getMonthValue() == mesFinal)
+                .count();
+            
+            int cantidadFirmas = (int) firmas.stream()
+                .filter(f -> f.getFechaFirma() != null)
+                .filter(f -> f.getFechaFirma().getYear() == anioFinal && f.getFechaFirma().getMonthValue() == mesFinal)
+                .count();
+            
+            tendencia.add(EstadisticaResponse.EstadisticaMensual.builder()
+                .mes(mesLabel)
+                .cantidadDocumentos(cantidadDocs)
+                .cantidadFirmas(cantidadFirmas)
+                .build());
+        }
+        
+        return tendencia;
     }
 }
